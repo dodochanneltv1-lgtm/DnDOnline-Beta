@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DnD ระบบผู้เล่น</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: transparent; /* ทำให้พื้นหลังโปร่งใส */
+      color: white;
+      text-align: center;
+      padding: 50px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .menu-title {
+      font-size: 3.5em;
+      margin-bottom: 15px;
+      font-weight: bold;
+      background: linear-gradient(90deg, #ff8a00, #e52e71);
+      -webkit-background-clip: text;
+      background-clip: text; /* เพิ่ม property มาตรฐาน */
+      
+      /* [แก้ไข] ใช้ !important เพื่อบังคับให้สีตัวอักษรโปร่งใส */
+      color: transparent !important; 
+      -webkit-text-fill-color: transparent;
+
+      /* [แก้ไข] กำหนด text-shadow ใหม่ เพื่อไม่ให้สไตล์เก่ามาทับ */
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .menu-subtitle {
+      font-size: 1.2em;
+      margin-bottom: 50px;
+      color: #e0e0e0;
+      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+    }
+
+    .btn-group {
+      width: 100%;
+      max-width: 400px;
+    }
+    
+    .btn {
+      display: block;
+      width: 100%;
+      background-color: rgba(20, 20, 20, 0.6);
+      color: white;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .btn:hover {
+      background-color: rgba(40, 40, 40, 0.8);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+
+    footer {
+      margin-top: 50px;
+      font-size: 0.9em;
+      color: #aaa;
+      text-shadow: 1px 1px 2px #000;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="menu-title">🎲 Dungeons and Dragons 🎲</h1>
+  
+  <p class="menu-subtitle">เลือกบทบาทของคุณเพื่อเริ่มต้นการผจญภัย</p>
+
+  <div class="btn-group">
+    <button class="btn" onclick="startMusicAndNavigate()">เข้าร่วม</button>
+</div>
+  
+  <footer>
+    © 2025 ระบบ DnD โดย ก้องฟ้า & GPT & Copilot & Gemini
+  </footer>
+
+  <script>
+    function startMusicAndNavigate() {
+      // ส่งคำสั่งไปให้ index.html เพื่อเล่นเพลง
+      window.parent.postMessage('REQUEST_PLAY_MUSIC', '*');
+      // ⭐️ [MODIFIED] เปลี่ยนไปหน้า login.html ทันที
+      location.href = 'login.html';
+    }
+</script>
+
+
+</body>
+</html>

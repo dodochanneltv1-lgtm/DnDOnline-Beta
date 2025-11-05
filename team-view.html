@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team View - ข้อมูลเพื่อนร่วมทีม (v3.1)</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* (สไตล์ CSS เดิม ยังคงสวยงามและทำงานได้ดี) */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .player-card {
+            background: rgba(10, 0, 0, 0.75);
+            border: 1px solid rgba(0, 123, 255, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+        }
+        .player-card h3 {
+            color: #8be4ff;
+            border-bottom: 1px solid rgba(0, 123, 255, 0.4);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .player-card p {
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+        .player-stats ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+        .player-stats li {
+             margin-left: 0;
+             padding-left: 0;
+             font-family: 'Cinzel', serif;
+        }
+    </style>
+</head>
+<body>
+    <h1>ข้อมูลเพื่อนร่วมทีม (Team View)</h1>
+    <p>นี่คือข้อมูลคร่าวๆ ของตัวละครอื่นๆ ในห้องนี้ (ไม่แสดงไอเทม/เควสส่วนตัว)</p>
+    <button onclick="window.location.href='player-dashboard.html'" class="refresh-btn">ย้อนกลับแดชบอร์ด</button>
+    <div class="team-grid" id="teamViewContainer">
+        <p style="grid-column: 1 / -1; text-align: center;">กำลังโหลดข้อมูลทีม...</p>
+    </div>
+    
+    <!-- [V3 BUG FIX] โหลด Scripts V3 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script src="Javascript/firebase-init.js"></script>
+    <script src="Javascript/ui-helpers.js"></script>
+    
+    <!-- [V3 BUG FIX] โหลด "กฎ" และ "เอนจิ้นคำนวณ" V3 -->
+    <script src="Javascript/skills-data.js"></script>
+    <script src="Javascript/charector.js"></script>
+    
+    <script>
+    // =================================================================
+    // [ ⭐️ อัปเดต v3.1 ⭐️ ]
+    // อัปเดตฟังก์ชันคำนวณสเตตัสแบบย่อในหน้านี้
+    // ให้รวมโบนัสอาชีพ (Main/Sub) เข้าไปด้วย
+    // =================================================================
+
+    function calculateTotalStat_TeamView(charData, statKey) {
+        if (!charData || !charData.stats) return 0;
+        
+        const stats = charData.stats;
+        const upperStatKey = statKey.toUpperCase();
+        
+        const permanentLevel = charData.level || 1;
+        let tempLevel = 0;
+        if (Array.isArray(charData.activeEffects)) {
+            charData.activeEffects.forEach(effect => {
+                if (effect.stat === 'Level' && effect.modType === 'FLAT') {
+                    tempLevel += (effect.amount || 0);
+                }
+                if (effect.type === 'TEMP_LEVEL_PERCENT') {
+                    tempLevel += Math.floor(permanentLevel * (effect.amount / 100));
+                }
+            });
+        }
+        const totalLevel = permanentLevel + tempLevel;
+
+        // [ ⭐️ อัปเดต v3.1 ⭐️ ]
+        // (คำนวณแบบย่อ: เผ่า + อาชีพ + อัป + บัฟDM)
+        let baseStat = (stats.baseRaceStats?.[upperStatKey] || 0) +
+                       (stats.investedStats?.[upperStatKey] || 0) +
+                       (stats.tempStats?.[upperStatKey] || 0);
+
+        const classMainData = (typeof CLASS_DATA !== 'undefined') ? CLASS_DATA[charData.classMain] : null;
+        const classSubData = (typeof CLASS_DATA !== 'undefined') ? CLASS_DATA[charData.classSub] : null;
+        
+        if (classMainData && classMainData.bonuses) {
+            baseStat += (classMainData.bonuses[upperStatKey] || 0);
+        }
+        if (classSubData && classSubData.bonuses) {
+            baseStat += (classSubData.bonuses[upperStatKey] || 0);
+        }
+        // [ ⭐️ สิ้นสุดอัปเดต v3.1 ⭐️ ]
+
+        // (ไม่คำนวณ Passives, Auras, Equipment ในหน้า Team View)
+
+        // (คำนวณโบนัสจากบัฟ/ดีบัฟชั่วคราว)
+        let flatBonus = 0;
+        let percentBonus = 0;
+        if (Array.isArray(charData.activeEffects)) {
+            charData.activeEffects.forEach(effect => {
+                if (effect.stat === upperStatKey || effect.stat === 'ALL') {
+                    if (effect.modType === 'FLAT') flatBonus += (effect.amount || 0);
+                    else if (effect.modType === 'PERCENT') percentBonus += (effect.amount || 0);
+                }
+            });
+        }
+        
+        let finalStat = (baseStat * (1 + (percentBonus / 100))) + flatBonus;
+        
+        if (finalStat > 0 && totalLevel > 1) {
+            const levelBonus = finalStat * (totalLevel - 1) * 0.2;
+            finalStat += levelBonus;
+        }
+    
+        if (charData.race === 'โกเลม' && upperStatKey === 'DEX') {
+            return 0;
+        }
+
+        return Math.floor(finalStat);
+    }
+    
+    // (ใช้ calculateHP (V3) ที่โหลดมาจาก charector.js)
+    const calcHPFn = typeof calculateHP === 'function' ? calculateHP : (r, c, con) => con + 10;
+    const getStatBonusFn = typeof getStatBonus === 'function' ? getStatBonus : (val) => Math.floor((val - 10) / 2);
+
+    // =================================================================
+    // Main Logic (V3)
+    // =================================================================
+
+    const currentUserUid = localStorage.getItem("currentUserUid"); 
+    const roomId = sessionStorage.getItem('roomId');
+    const teamViewContainer = document.getElementById('teamViewContainer');
+
+    if (!roomId || !currentUserUid) {
+        Swal.fire('ข้อผิดพลาด', 'โปรดเข้าร่วมห้องและล็อกอินก่อน', 'error').then(() => {
+            window.location.replace('lobby.html');
+        });
+        throw new Error("Missing Room ID or User UID");
+    }
+
+    // (ใช้ V3 Path)
+    db.ref(`rooms/${roomId}/playersByUid`).on('value', (snapshot) => {
+        const allPlayers = snapshot.val();
+        teamViewContainer.innerHTML = '';
+        let foundTeammates = false;
+
+        if (!allPlayers) {
+            teamViewContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">ยังไม่มีผู้เล่นอื่นเข้าร่วมห้อง</p>';
+            return;
+        }
+
+        // (ใช้ V3 UID)
+        for (const uid in allPlayers) {
+            if (uid !== currentUserUid) { 
+                foundTeammates = true;
+                const player = allPlayers[uid];
+                
+                // (ใช้ฟังก์ชัน V3.1)
+                const finalCon = calculateTotalStat_TeamView(player, 'CON');
+                const maxHp = calcHPFn(player.race, player.classMain, finalCon);
+                const permanentLevel = player.level || 1;
+                let tempLevel = 0;
+                if (Array.isArray(player.activeEffects)) {
+                    player.activeEffects.forEach(effect => {
+                         if (effect.stat === 'Level' && effect.modType === 'FLAT') tempLevel += (effect.amount || 0);
+                         if (effect.type === 'TEMP_LEVEL_PERCENT') tempLevel += Math.floor(permanentLevel * (effect.amount / 100));
+                    });
+                }
+                const totalLevel = permanentLevel + tempLevel;
+                const levelDisplay = tempLevel > 0 ? `${permanentLevel} <span style="color:#00ff00;">(+${tempLevel})</span>` : `${permanentLevel}`;
+
+                const card = document.createElement('div');
+                card.className = 'player-card';
+                card.innerHTML = `
+                    <h3>${player.name} (Lv. ${levelDisplay})</h3>
+                    <p><strong>เผ่า:</strong> ${player.raceEvolved || player.race}</p>
+                    <p><strong>อาชีพหลัก:</strong> ${player.classMain || '-'}</p>
+                    <p><strong>อาชีพรอง:</strong> ${player.classSub || '-'}</p>
+                    <p><strong>HP:</strong> ${player.hp} / ${maxHp}</p>
+                    <p><strong>เพศ:</strong> ${player.gender || '-'} &bull; <strong>อายุ:</strong> ${player.info?.age || '-'}</p>
+                    <details>
+                        <summary style="font-weight: bold; margin-top: 10px;">ภูมิหลัง</summary>
+                        <p style="padding: 5px 0;">${player.background || 'ไม่มีข้อมูล'}</p>
+                    </details>
+                    <div class="player-stats">
+                        <ul>
+                            <li><strong>STR:</strong> ${calculateTotalStat_TeamView(player, 'STR')}</li>
+                            <li><strong>DEX:</strong> ${calculateTotalStat_TeamView(player, 'DEX')}</li>
+                            <li><strong>CON:</strong> ${calculateTotalStat_TeamView(player, 'CON')}</li>
+                            <li><strong>INT:</strong> ${calculateTotalStat_TeamView(player, 'INT')}</li>
+                            <li><strong>WIS:</strong> ${calculateTotalStat_TeamView(player, 'WIS')}</li>
+                            <li><strong>CHA:</strong> ${calculateTotalStat_TeamView(player, 'CHA')}</li>
+                        </ul>
+                    </div>
+                `;
+                teamViewContainer.appendChild(card);
+            }
+        }
+
+        if (!foundTeammates) {
+            teamViewContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">ยังไม่มีผู้เล่นอื่นเข้าร่วมห้อง</p>';
+        }
+    });
+</script>
+</body>
+</html>

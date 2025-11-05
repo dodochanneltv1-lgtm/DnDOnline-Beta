@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - DnD System</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            background: rgba(10, 0, 0, 0.75);
+            border: 1px solid rgba(255, 140, 0, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(255, 69, 0, 0.5);
+        }
+        .auth-container h1 {
+            color: #ffa500;
+            margin-bottom: 30px;
+        }
+        .auth-container input {
+            margin-bottom: 15px;
+        }
+        .auth-container a {
+            color: #ffc107;
+            text-decoration: none;
+        }
+        .auth-container a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <h1>เข้าสู่ระบบ</h1>
+        
+        <label for="username">ชื่อผู้ใช้:</label>
+        <input type="text" id="username" placeholder="กรอกชื่อผู้ใช้" required>
+        
+        <label for="password">รหัสผ่าน:</label>
+        <input type="password" id="password" placeholder="กรอกรหัสผ่าน" required>
+        
+        <button onclick="loginUser()">เข้าสู่ระบบ</button>
+        
+        <p style="margin-top: 20px;">
+            ยังไม่มีบัญชี? <a href="register.html">สร้างบัญชีใหม่ที่นี่</a>
+        </p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="Javascript/firebase-init.js"></script>
+    <script src="Javascript/ui-helpers.js"></script>
+    <script src="Javascript/auth.js"></script>
+
+</body>
+</html>

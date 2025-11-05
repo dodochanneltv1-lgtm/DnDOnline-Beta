@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>DnD System (Persistent Music)</title>
+    <link rel="stylesheet" href="style.css"> 
+    <script src="Javascript/BG.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        #contentFrame {
+            width: 100%; height: 100vh; border: none;
+            background-color: transparent; text-align: center;
+        }
+        #background-layers {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+        }
+        .bg-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; background-size: cover; background-position: center;
+            background-repeat: no-repeat; transition: opacity 2s ease-in-out;
+        }
+        .bg-layer.active { opacity: 1; }
+        
+        /* [ADDED] สไตล์สำหรับตัวควบคุมเสียง */
+        #volume-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+        #volume-control span {
+            font-size: 20px;
+        }
+        #volumeSlider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 120px;
+            height: 5px;
+            background: #ddd;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border-radius: 3px;
+        }
+        #volumeSlider:hover { opacity: 1; }
+        #volumeSlider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 15px; height: 15px; background: #ffae00;
+            cursor: pointer; border-radius: 50%;
+        }
+        #volumeSlider::-moz-range-thumb {
+            width: 15px; height: 15px; background: #ffae00;
+            cursor: pointer; border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div id="background-layers">
+        <div id="bg-layer-1" class="bg-layer"></div>
+        <div id="bg-layer-2" class="bg-layer"></div>
+    </div>
+    
+    <div id="volume-control">
+        <span>🔊</span>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
+    </div>
+
+    <iframe src="player.html" style="display:none;" id="musicFrame"></iframe>
+    <iframe src="menu.html" id="contentFrame" name="contentFrame"></iframe>
+
+    <script>
+        const musicPlayerFrame = document.getElementById('musicFrame');
+        const volumeSlider = document.getElementById('volumeSlider');
+        
+        // Listener รอรับคำสั่งให้เล่นเพลงจากหน้าลูก (เช่น menu.html)
+        window.addEventListener('message', (event) => {
+            if(event.data === 'REQUEST_PLAY_MUSIC'){
+                // ส่งคำสั่งต่อไปให้ iframe ที่เล่นเพลงโดยเฉพาะ
+                musicPlayerFrame.contentWindow.postMessage({ action: 'playMusic' }, '*');
+            }
+        });
+
+        // [ADDED] Listener สำหรับ Slider ปรับเสียง
+        volumeSlider.addEventListener('input', (event) => {
+            const volumeValue = parseFloat(event.target.value);
+            musicPlayerFrame.contentWindow.postMessage({ action: 'setVolume', value: volumeValue }, '*');
+        });
+    </script>
+</body>
+</html>

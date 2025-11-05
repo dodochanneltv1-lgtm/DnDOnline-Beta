@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Music Player</title>
+</head>
+<body>
+<audio id="myAudio" src="How To Train Your Dragon Epic Cover - We Go With the Sky - By Lucas Ricciotti.mp3" loop></audio>
+
+<script>
+const audio = document.getElementById('myAudio');
+audio.volume = 0.5; // ตั้งค่าความดังเริ่มต้นที่ 50%
+
+// พยายามเล่นเพลงอัตโนมัติเมื่อโหลด (อาจถูกเบราว์เซอร์บล็อก)
+function attemptAutoplay() {
+    audio.play().then(() => {
+        console.log("Autoplay successful!");
+    }).catch(error => {
+        console.log("Autoplay was prevented. Waiting for user interaction.", error);
+    });
+}
+attemptAutoplay();
+
+
+window.addEventListener('message', (event) => {
+  // รับคำสั่งจากหน้าแม่ (index.html)
+  if (event.data && typeof event.data === 'object') {
+      switch (event.data.action) {
+          case 'playMusic':
+              if (audio.paused) {
+                  audio.play();
+              }
+              break;
+          case 'setVolume':
+              if (typeof event.data.value === 'number') {
+                  audio.volume = event.data.value;
+              }
+              break;
+      }
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- [อัปเกรด v2] เปลี่ยน Title -->
+  <title>Player Dashboard (v2)</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
+    <style>
+      /* (CSS ส่วนใหญ่ถูกย้ายไปอยู่ใน player-dashboard-script.js ที่ฟังก์ชัน injectDashboardStyles()) */
+      @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Prompt:wght@400;600&display=swap');
+
+      /* --- [NEW] โค้ด Style สำหรับการ์ดแสดงผล --- */
+      .result-card {
+        background: rgba(0, 0, 0, 0.85);
+        border: 2px solid #a97125;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        transition: all 0.5s ease;
+        opacity: 1;
+      }
+      .result-card.hidden {
+        opacity: 0;
+        transform: translateY(20px);
+        pointer-events: none;
+      }
+      .result-card h4 {
+        margin: 0 0 10px 0;
+        padding-bottom: 5px;
+        color: #ffc107;
+        text-align: center;
+        border-bottom: 1px solid #a97125;
+      }
+      .result-card p {
+        margin: 5px 0;
+        font-family: 'Prompt', sans-serif;
+      }
+      .result-card .outcome {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #a97125;
+        font-weight: bold;
+        font-size: 1.2em;
+        text-align: center;
+      }
+      .result-card.miss {
+        border-color: #dc3545;
+        box-shadow: 0 0 15px #dc3545;
+      }
+      .result-card.miss .outcome { color: #ff4d4d; }
+      .result-card.hit {
+        border-color: #28a745;
+        box-shadow: 0 0 15px #28a745;
+      }
+      .result-card.hit .outcome { color: #00ff00; }
+      /* --- สิ้นสุดส่วน Style ใหม่ --- */
+
+      body {
+        font-family: 'Cinzel', serif;
+        margin: 0;
+        padding: 30px;
+        background-image: url('0af9b63d-31b3-4514-9180-b5cb36d6db90.png');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: #f5deb3;
+        text-shadow: 1px 1px 3px #000;
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
+      }
+
+      .panel {
+        background: rgba(10, 0, 0, 0.75);
+        border: 1px solid rgba(255, 140, 0, 0.5);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
+      }
+
+      h2 {
+        text-align: center;
+        color: #ffa500;
+        border-bottom: 1px solid rgba(255, 140, 0, 0.5);
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+        text-shadow: 0 0 8px #ff4500;
+      }
+
+      p, li, label, strong {
+        color: #fff5cc;
+        font-family: 'Prompt', sans-serif;
+        font-weight: 600;
+        text-shadow: 1px 1px 2px #000;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 10px;
+        padding: 10px;
+        font-family: 'Cinzel', serif;
+        font-weight: 600;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(90deg, #ff4500, #ffae00);
+        color: #fff;
+        cursor: pointer;
+        text-shadow: 1px 1px 3px #000;
+        box-shadow: 0 0 10px rgba(255, 69, 0, 0.7);
+        transition: all 0.3s ease;
+      }
+      button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(255, 165, 0, 0.9);
+      }
+      
+      #dice-result, #attackRollResult, #damageRollResult {
+        font-size: 1.1em;
+        text-align: center;
+        color: #ffeb8a;
+        text-shadow: 0 0 8px #ff4500;
+        margin-top: 15px;
+      }
+
+      #player-dice-animation-area {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80px;
+        margin: 10px 0;
+      }
+      #player-dice-animation-area > div {
+          width: 60px;
+          height: 60px;
+      }
+
+      @media (max-width: 768px) {
+        body { padding: 10px; }
+        .grid-container { grid-template-columns: 1fr; }
+      }
+      
+      /* [อัปเกรด v2] สไตล์สำหรับ Turn Indicator */
+      #turnIndicator { text-align: center; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-weight: bold; }
+      #turnIndicator.my-turn { background-color: #28a745; color: white; text-shadow: 1px 1px 2px black; }
+      #turnIndicator.other-turn { background-color: #333; color: #aaa; }
+      .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="grid-container">
+    
+        <!-- 
+          [อัปเกรด v2] (ข้อ 5)
+          ลบข้อมูลตัวละครที่ Hardcode (เช่น <p><strong>ชื่อ:</strong>...) ออกทั้งหมด
+          Script (v2) จะสร้าง HTML และฉีดเข้ามาใน div นี้เอง
+        -->
+        <div class="panel" id="characterInfoPanel">
+            <!-- player-dashboard-script.js จะเติม HTML ที่นี่ -->
+        </div>
+
+        <div class="panel">
+            <h2>
+                ควบคุมและทอยเต๋า
+                <!-- [ใหม่ v2] ปุ่ม Toggle (ข้อ 5.2) -->
+                <button onclick="toggleSectionVisibility('controlPanel_body')" class="toggle-btn">ซ่อน</button>
+            </h2>
+            <div id="controlPanel_body">
+                <label for="diceType">ชนิดเต๋า:</label>
+                <select id="diceType">
+                    <option value="4">d4</option>
+                    <option value="6">d6</option>
+                    <option value="8">d8</option>
+                    <option value="10">d10</option>
+                    <option value="12">d12</option>
+                    <option value="20" selected>d20</option>
+                    <option value="100">d100</option>
+                </select>
+                <label for="diceCount">จำนวนลูก:</label>
+                <input type="number" id="diceCount" value="1" min="1" max="10">
+                <button onclick="playerRollDice()">ทอยเต๋า (ทั่วไป)</button>
+                <div id="player-dice-animation-area"></div>
+                <div id="dice-result"></div>
+
+                <button id="goToStatsButton" onclick="location.href='stat-assignment.html'" style="display:none; background-color: #ffc107; color: black; margin-top: 15px;">
+                    อัปเกรดสถานะ
+                </button>
+                <!-- [อัปเกรด v2] เปลี่ยนลิงก์กลับไป map.html (ถ้าใช้) หรือ lobby.html -->
+                <a href="lobby.html"><button style="background-color: #6c757d;">กลับล็อบบี้</button></a>
+                <!-- (หากใช้ระบบแผนที่ ให้เปลี่ยนเป็น map.html) -->
+            </div>
+        </div>
+
+        <div class="panel" id="combatPanel" style="border-color: #dc3545;">
+            <h2>
+                ⚔️ การต่อสู้ ⚔️
+                <!-- [ใหม่ v2] ปุ่ม Toggle (ข้อ 5.2) -->
+                <button onclick="toggleSectionVisibility('combatPanel_body')" class="toggle-btn">ซ่อน</button>
+            </h2>
+            <div id="combatPanel_body">
+                <div id="turnIndicator" class="hidden"></div>
+                
+                <label for="enemyTargetSelect"><strong>เลือกเป้าหมาย:</strong></label>
+                <select id="enemyTargetSelect" style="width: 100%; margin-bottom: 10px;"></select>
+                
+                <!-- [อัปเกรด v2] เปลี่ยน onclick ไปยัง player-actions.js -->
+                <button id="skillButton" onclick="showSkillModal()" style="background-color: #6f42c1; margin-top: 5px;">🌟 ใช้สกิล</button>
+                <button id="attackRollButton" onclick="performAttackRoll()">1. ทอยเต๋าโจมตี (d20)</button>
+                
+                <div id="damageRollSection" style="display:none; margin-top:15px; border-top: 1px dashed #ccc; padding-top: 10px;">
+                    <p style="color:#28a745;">โจมตีโดน! ทอยเต๋าสำหรับความเสียหาย:</p>
+                    <p><strong>อาวุธ:</strong> <span id="damageWeaponName">-</span> (<span id="damageDiceInfo"></span>)</p>
+                    <button id="damageRollButton" onclick="performDamageRoll()">2. ทอยเต๋าสร้างความเสียหาย</button>
+                </div>
+
+                <div id="rollResultCard" class="result-card hidden">
+                    <!-- Script จะเติมผลลัพธ์ที่นี่ -->
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>
+                🎒 กระเป๋า
+                <!-- [ใหม่ v2] ปุ่ม Toggle (ข้อ 5.2) -->
+                <button onclick="toggleSectionVisibility('inventory_body')" class="toggle-btn">ซ่อน</button>
+            </h2>
+            <div id="inventory_body">
+                <ul id="inventory">
+                    <li>ยังไม่มีไอเทม</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>
+                🛡️ อุปกรณ์สวมใส่
+                <!-- [ใหม่ v2] ปุ่ม Toggle (ข้อ 5.2) -->
+                <button onclick="toggleSectionVisibility('equippedItemsList_body')" class="toggle-btn">ซ่อน</button>
+            </h2>
+            <div id="equippedItemsList_body">
+                <ul id="equippedItemsList">
+                    <!-- [อัปเกรด v2] UI ใหม่สำหรับ Main/Off Hand (ข้อ 5.3) -->
+                    <li><strong>มือหลัก:</strong> <span id="eq-mainHand">-</span> <button onclick="unequipItem('mainHand')" style="display:none; width:auto; padding: 2px 8px; font-size:0.8em; background-color:#dc3545;">ถอด</button></li>
+                    <li><strong>มือรอง:</strong> <span id="eq-offHand">-</span> <button onclick="unequipItem('offHand')" style="display:none; width:auto; padding: 2px 8px; font-size:0.8em; background-color:#dc3545;">ถอด</button></li>
+                    <li><strong>หัว:</strong> <span id="eq-head">-</span> <button onclick="unequipItem('head')" style="display:none; width:auto; padding: 2px 8px; font-size:0.8em; background-color:#dc3545;">ถอด</button></li>
+                    <li><strong>ลำตัว:</strong> <span id="eq-chest">-</span> <button onclick="unequipItem('chest')" style="display:none; width:auto; padding: 2px 8px; font-size:0.8em; background-color:#dc3545;">ถอด</button></li>
+                    <li><strong>ขา:</strong> <span id="eq-legs">-</span> <button onclick="unequipItem('legs')" style="display:none; width:auto; padding: 2px 8px; font-size:0.8em; background-color:#dc3545;">ถอด</button></li>
+                    <li><strong>เท้า:</strong> <span id="eq-feet">-</span> <button onclick="unequipItem('feet')" style="display:none; width:auto; padding: 2px 8px; font-size:0.8em; background-color:#dc3545;">ถอด</button></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>
+                👥 เพื่อนร่วมทีม
+                <!-- [ใหม่ v2] ปุ่ม Toggle (ข้อ 5.2) -->
+                <button onclick="toggleSectionVisibility('teammate_body')" class="toggle-btn">ซ่อน</button>
+            </h2>
+            <div id="teammate_body">
+                <select id="teammateSelect" onchange="showTeammateInfo()">
+                    <option value="">-- เลือกดูข้อมูล --</option>
+                </select>
+                <div id="teammateInfo" style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 5px;">
+                    <p>เลือกเพื่อนร่วมทีมเพื่อดูข้อมูล</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>
+                👹 คู่ต่อสู้
+                <!-- [ใหม่ v2] ปุ่ม Toggle (ข้อ 5.2) -->
+                <button onclick="toggleSectionVisibility('enemyPanelContainer_body')" class="toggle-btn">ซ่อน</button>
+            </h2>
+            <div id="enemyPanelContainer_body">
+                <div id="enemyPanelContainer">
+                    <p><em>ไม่มีศัตรูที่กำลังต่อสู้กับคุณ</em></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" id="questPanel">
+            <h2>
+                📜 เควสที่ได้รับ
+                <!-- [ใหม่ v2] ปุ่ม Toggle (ข้อ 5.2) -->
+                <button onclick="toggleSectionVisibility('questPanel_body')" class="toggle-btn">ซ่อน</button>
+            </h2>
+            <div id="questPanel_body">
+                <p><strong>ชื่อเควส:</strong> <span id="questTitle">-</span></p>
+                <p><strong>รายละเอียด:</strong> <span id="questDetail">-</span></p>
+                <p><strong>รางวัล:</strong> <span id="questReward">-</span></p> 
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>
+                📖 เนื้อเรื่องล่าสุด
+                <!-- [ใหม่ v2] ปุ่ม Toggle (ข้อ 5.2) -->
+                <button onclick="toggleSectionVisibility('story_body')" class="toggle-btn">ซ่อน</button>
+            </h2>
+            <div id="story_body">
+                <p id="story">ยังไม่มีเนื้อเรื่อง</p>
+            </div>
+        </div>
+    </div>
+      
+    <!-- [อัปเกรด v2] โหลด Script ใหม่ตามลำดับ -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script src="Javascript/firebase-init.js"></script>
+    <script src="Javascript/ui-helpers.js"></script>
+    <script src="Javascript/dice-roller.js"></script>
+
+    <!-- [สำคัญ] โหลดกฎและตรรกะใหม่ก่อน Dashboard Script -->
+    <script src="Javascript/skills-data.js"></script> <!-- (v2) ฐานข้อมูลกฎ -->
+    <script src="Javascript/charector.js"></script>   <!-- (v2) ฟังก์ชัน calculateHP -->
+    <script src="Javascript/player-dashboard-script.js"></script>
+    <script src="Javascript/player-actions.js"></script> 
+    
+    
+</body>
+</html>

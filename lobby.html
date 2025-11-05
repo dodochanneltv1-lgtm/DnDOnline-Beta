@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobby - DnD System</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* [ใหม่] สไตล์เฉพาะสำหรับ Lobby เพื่อเน้นการออกแบบ D&D */
+        body { padding: 30px; }
+        
+        /* ส่วนหัวและปุ่มควบคุม */
+        .lobby-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(10, 0, 0, 0.85); /* พื้นหลังเข้มขึ้น */
+            border-radius: 10px;
+            border: 1px solid #ffae00;
+            box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
+            margin-bottom: 30px;
+        }
+        .lobby-header span { 
+            font-weight: 700; 
+            color: #ffe4b5; 
+            font-size: 1.1em;
+            font-family: 'Cinzel', serif;
+        }
+
+        /* โครงร่างหลัก: แยกส่วนการจัดการและรายการห้อง */
+        .grid-container {
+            display: grid; 
+            grid-template-columns: 1fr 2fr; 
+            gap: 25px;
+        }
+
+        /* ส่วนกล่องย่อยภายใน (Create/Join) */
+        .sub-panel {
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+        }
+        .sub-panel h3 {
+            margin-top: 0;
+            color: #ffeb8a;
+            border-bottom: 1px dashed rgba(255, 140, 0, 0.3);
+            padding-bottom: 8px;
+            font-family: 'Cinzel', serif;
+        }
+        
+        /* สไตล์ช่องกรอกข้อมูล */
+        .panel input[type="text"], .panel input[type="password"] {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 140, 0, 0.4);
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        /* ส่วนรายการห้องทั้งหมด (Room List) */
+        .room-list-container {
+            /* ใช้สไตล์ .panel หลัก */
+            height: 100%; /* ให้ยืดเต็มความสูงฝั่งซ้าย */
+        }
+        
+        #publicRoomsList {
+            list-style: none;
+            padding: 0;
+            /* [NEW] ตั้งความสูงสูงสุดและเปิด Scroll */
+            max-height: 70vh; 
+            overflow-y: auto;
+            border-top: 2px solid rgba(255, 140, 0, 0.2);
+            padding-top: 10px;
+        }
+        #publicRoomsList li {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            /* [IMPROVEMENT] ใช้การตกแต่งแบบเน้นสีทอง */
+            border-left: 5px solid #ffa500; 
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Prompt', sans-serif;
+            color: #f5deb3;
+        }
+        #publicRoomsList li:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(3px);
+            box-shadow: 0 0 10px rgba(255, 165, 0, 0.3);
+        }
+       .swal2-popup {
+        border: 2px solid #ffd700; /* ขอบทองรอบกล่อง */
+        background: #1c1c1c !important; /* พื้นหลังเข้ม */
+    }
+
+    .swal2-popup .swal2-title {
+        color: #ffd700;
+        text-shadow: 0 0 5px rgba(255, 165, 0, 0.7);
+    }
+    
+    .swal2-popup button.swal2-styled {
+        font-size: 1.2em;
+        font-weight: bold;
+        padding: 15px 30px;
+        margin: 5px 0;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        transition: transform 0.1s ease, box-shadow 0.2s ease;
+        border: none;
+    }
+
+    .swal2-popup button.swal2-styled:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+    }
+    
+    /* สไตล์เฉพาะสำหรับปุ่ม Player (สีส้ม-ทอง) */
+    #swal-player-btn {
+        background: linear-gradient(90deg, #ff8c00, #cc5500) !important;
+        color: #fff;
+    }
+    
+    /* สไตล์เฉพาะสำหรับปุ่ม DM (สีน้ำเงินเข้ม) */
+    #swal-dm-btn {
+        background: linear-gradient(90deg, #007bff, #004d99) !important;
+        color: #fff;
+    }
+
+    /* สไตล์เฉพาะสำหรับปุ่ม Cancel (สีเทาเข้ม) */
+    #swal-cancel-btn {
+        background: #444 !important; 
+        color: #ccc;
+    }
+
+    /* สไตล์อิโมจิ/ไอคอนในปุ่ม SweetAlert: ทำให้ไอคอนดูชัดเจนขึ้น */
+    .swal2-popup button.swal2-styled .emoji-icon {
+        font-size: 1.5em; /* ขยายขนาดอิโมจิ */
+        margin-right: 10px;
+        filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)); /* เพิ่มเงาให้เด่น */
+    }
+    
+    /* [ใหม่] CSS สำหรับ animation สถานะ (Stat Up/Down) ใน player-dashboard-script.js */
+    @keyframes stat-fade-in {
+        0% { color: inherit; transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { color: inherit; transform: scale(1); }
+    }
+    
+    .stat-up {
+        color: #00ff00 !important; /* สีเขียวเมื่อค่าเพิ่ม */
+        animation: stat-fade-in 1.5s ease;
+    }
+
+    .stat-down {
+        color: #ff4500 !important; /* สีแดงเมื่อค่าลด */
+        animation: stat-fade-in 1.5s ease;
+    }
+    </style>
+</head>
+<body>
+    <div class="lobby-header">
+        <span>ยินดีต้อนรับ, <span id="userEmail"></span></span>
+        <div style="display:flex; gap: 10px;">
+            <a href="tutorial.html" target="_self"><button style="background-color:#007bff; width: auto;">📖 คู่มือ/วิธีเล่น</button></a>
+            <button onclick="logoutUser()" style="background-color:#dc3545; width: auto;">🚪 ออกจากระบบ</button>
+        </div>
+    </div>
+
+    <h2 style="text-align:center; color: #ffd700; text-shadow: 0 0 8px #ff4500;">DnD LOBBY CENTER</h2>
+
+
+    <div class="grid-container">
+        
+        <div class="panel">
+            <h2>จัดการห้อง</h2>
+
+            <div class="sub-panel" style="background-color: rgba(0, 123, 255, 0.1);">
+                <h3>🛡️ สร้างห้องใหม่ (สำหรับ DM)</h3>
+                <input type="text" id="roomName" placeholder="ชื่อห้อง">
+                <input type="password" id="roomPassword" placeholder="รหัสผ่านเข้าห้อง (เว้นว่างถ้าเป็นสาธารณะ)">
+                <input type="password" id="dmPassword" placeholder="รหัสผ่านเข้า DM Panel (สำคัญ!)"> 
+                <button onclick="createRoom()" style="background: linear-gradient(90deg, #1cb5e0, #000046);">สร้างห้อง</button>
+            </div>
+
+            <div class="sub-panel" style="background-color: rgba(40, 167, 69, 0.1); margin-top: 20px;">
+                <h3>🚪 เข้าร่วมห้อง</h3>
+                <input type="text" id="roomIdInput" placeholder="กรอก ID ห้อง (เช่น 123456)">
+                <button onclick="joinRoomSelection()" style="background: linear-gradient(90deg, #28a745, #1e7e34);">เข้าร่วม/เลือกบทบาท</button>
+            </div>
+        </div>
+
+        <div class="panel room-list-container">
+            <h2>🌍 ห้องทั้งหมดที่ออนไลน์อยู่</h2>
+            <ul id="publicRoomsList">
+                <li>กำลังโหลด...</li>
+            </ul>
+        </div>
+    </div>
+
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="Javascript/firebase-init.js"></script>
+    <script src="Javascript/ui-helpers.js"></script>
+    <script src="Javascript/auth.js"></script>
+    <script src="Javascript/lobby.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- [อัปเกรด v3.1] อัปเดต CSS -->
+    <title>Assign Stats (v3.1)</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        /* (สไตล์ CSS เดิม) */
+        body {
+            font-family: 'Prompt', sans-serif; background-color: transparent; color: #fff;
+            display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;
+        }
+        .main-container {
+            width: 100%; max-width: 700px; padding: 30px 40px; background-color: rgba(10, 10, 10, 0.75);
+            backdrop-filter: blur(12px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            font-size: 2.5em; text-align: center; margin-bottom: 10px; font-weight: bold;
+            color: #fff !important; text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5) !important;
+        }
+        .header-p {
+            text-align: center; font-size: 1.2em; color: #e0e0e0; margin-bottom: 15px; font-weight: 500;
+            text-shadow: 1px 1px 5px #000, -1px -1px 5px #000;
+        }
+        .header-p.small-text { font-size: 1em; color: #bbb; }
+        #remainingPointsUI {
+            font-size: 3em; font-weight: bold; color: #ffc107;
+            text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+        }
+        hr { border: none; border-top: 1px solid rgba(255, 255, 255, 0.2); margin: 30px 0; }
+        #statPanel { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        
+        /* [ ⭐️ อัปเดต v3.1 ⭐️ ]
+           เปลี่ยน grid-template-columns จาก 4 เป็น 5 คอลัมน์ 
+           เพื่อให้รองรับ "โบนัสอาชีพ" ที่เพิ่มเข้ามา
+        */
+        .stat-line {
+            display: grid; 
+            grid-template-columns: 60px 1fr 100px 100px 100px; 
+            align-items: center; 
+            gap: 15px;
+            background-color: rgba(0,0,0,0.2); padding: 10px 15px; border-radius: 8px;
+        }
+        /* [ ⭐️ สิ้นสุดอัปเดต v3.1 ⭐️ ] */
+
+        .stat-label { font-weight: bold; font-size: 1.5em; }
+        .points-control { display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .btn-adjust {
+            width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.1); color: #fff; font-size: 1.5em; cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn-adjust:hover { background-color: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
+        .stat-value { font-size: 1.8em; font-weight: bold; text-align: center; }
+        .stat-bonus, .stat-total { text-align: center; padding: 8px; border-radius: 6px; font-size: 1.2em; font-weight: bold; }
+        .stat-bonus { background-color: rgba(0, 123, 255, 0.2); border: 1px solid rgba(0, 123, 255, 0.5); }
+        .stat-total { background-color: rgba(40, 167, 69, 0.3); border: 1px solid rgba(40, 167, 69, 0.6); }
+        #summaryPanel h2 { text-align: center; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); }
+        #baseStatsSummary p { font-size: 1.1em; margin: 8px 0; color: #ddd; text-shadow: 1px 1px 2px #000; }
+        #finalizeButton {
+            width: 100%; padding: 15px; margin-top: 15px; font-size: 1.1em; font-weight: bold;
+            border-radius: 8px; border: none; cursor: pointer; transition: all 0.3s ease;
+            background: linear-gradient(90deg, #1cb5e0, #000046); color: white;
+        }
+        #finalizeButton:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(28, 181, 224, 0.4); }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <!-- [อัปเกรด v3] -->
+    <h1>ลงแต้มสถานะ (v3)</h1>
+    <p class="header-p">คุณมีแต้มให้อัพได้รอบนี้: <span id="remainingPointsUI">0</span> แต้ม</p>
+    <p class="header-p small-text">ใช้แต้มเพื่อเพิ่มสถานะ (แต้มที่ไม่ได้ใช้จะถูกเก็บไว้)</p>
+    <hr>
+    <!-- statPanel จะถูกสร้างโดย stat-assignment.js -->
+    <div id="statPanel"></div>
+    <hr>
+    <div id="summaryPanel">
+        <h2>สถานะรวม (รวมโบนัส)</h2>
+        <!-- baseStatsSummary จะถูกสร้างโดย stat-assignment.js -->
+        <div id="baseStatsSummary"></div>
+        <button id="finalizeButton" onclick="finalizeStats()">บันทึกและกลับไปที่แดชบอร์ด</button>
+    </div>
+</div>
+
+<!-- Firebase (จำเป็น) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<!-- Scripts ของระบบ (v3) -->
+<!-- (ต้องโหลดตามลำดับนี้) -->
+
+<!-- 1. โหลด Firebase Config -->
+<script src="Javascript/firebase-init.js"></script>
+<!-- 2. โหลดเครื่องมือ UI (SweetAlert) -->
+<script src="Javascript/ui-helpers.js"></script>
+<!-- 3. โหลด "กฎ" (RACE_DATA) (สำหรับข้อจำกัด Golem) -->
+<script src="Javascript/skills-data.js"></script> 
+<!-- 4. โหลด "เอนจิ้นคำนวณ" (calculateHP) -->
+<script src="Javascript/charector.js"></script> 
+<!-- 5. โหลด "เอนจิ้น" ของหน้านี้ (ข้อ 4.2) -->
+<script src="Javascript/stat-assignment.js"></script>
+
+</body>
+</html>

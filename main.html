@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DnD Role Selection</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <style>
+    /* [แก้ไข] สไตล์ใหม่ทั้งหมดสำหรับหน้า main.html */
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: transparent; /* ทำให้พื้นหลังโปร่งใส */
+      color: white;
+      text-align: center;
+      padding: 50px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .main-title {
+      font-size: 3.5em;
+      margin-bottom: 15px;
+      font-weight: bold;
+      background: linear-gradient(90deg, #1cb5e0, #000046);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    .main-subtitle {
+      font-size: 1.2em;
+      margin-bottom: 50px;
+      color: #d0d0d0;
+      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+    }
+
+    .btn-group {
+      width: 100%;
+      max-width: 450px; /* ขยายความกว้างเล็กน้อยสำหรับ 3 ปุ่ม */
+    }
+    
+    .btn {
+      display: block;
+      width: 100%;
+      background-color: rgba(30, 30, 30, 0.65);
+      backdrop-filter: blur(5px); /* เพิ่มเอฟเฟกต์กระจกฝ้า */
+      color: white;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      text-align: left; /* จัดข้อความชิดซ้าย */
+      padding-left: 25px;
+    }
+
+    .btn:hover {
+      background-color: rgba(50, 50, 50, 0.8);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #aaa;
+      text-shadow: 1px 1px 2px #000;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="main-title">🎲 ยินดีต้อนรับสู่โลก DnD</h1>
+  
+  <p class="main-subtitle">เลือกบทบาทของคุณเพื่อเริ่มต้นการผจญภัย</p>
+
+  <div class="btn-group">
+    <button class="btn" onclick="location.href='PlayerCharecter.html'">🧝‍♂️ ผู้เล่น: สร้างตัวละคร</button>
+    <button class="btn" onclick="location.href='player-dashboard.html'">🎒 ผู้เล่น: เข้าสู่แดชบอร์ด</button>
+  </div>
+
+  <footer>
+    © 2025 ระบบ DnD โดย ก้องฟ้า & GPT & Copilot & Gemini
+  </footer>
+
+</body>
+</html>

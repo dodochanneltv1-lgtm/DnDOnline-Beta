@@ -1,0 +1,290 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Prompt:wght@400;600&display=swap');
+
+/* =================================================================================
+=== ธีมหลัก (Base Theme) ===
+================================================================================= */
+
+/* พื้นหลังหลัก */
+body {
+    font-family: 'Cinzel', serif;
+    margin: 0;
+    padding: 30px;
+    background-image: url('0af9b63d-31b3-4514-9180-b5cb36d6db90.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: #f5deb3;
+    text-shadow: 1px 1px 3px #000;
+}
+
+/* หัวเรื่องหลัก */
+h1 {
+    text-align: center;
+    color: #ffd700;
+    text-shadow: 0 0 10px #ff4500, 0 0 20px #ff0000;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+}
+
+/* แผงหลัก */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+/* กล่องข้อมูลแต่ละส่วน */
+.panel {
+    background: rgba(10, 0, 0, 0.75);
+    border: 1px solid rgba(255, 140, 0, 0.5);
+    box-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
+    padding: 20px;
+    border-radius: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.panel:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 25px rgba(255, 100, 0, 0.8);
+}
+
+/* หัวข้อแต่ละกล่อง */
+h2 {
+    color: #ffa500;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 140, 0, 0.5);
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    text-shadow: 0 0 5px #ff4500;
+}
+
+/* Input และ Select */
+input, select, textarea {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px solid rgba(255, 140, 0, 0.4);
+    border-radius: 6px;
+    background-color: rgba(20, 20, 20, 0.7);
+    color: #ffe4b5;
+    font-size: 15px;
+    box-shadow: inset 0 0 5px rgba(255, 69, 0, 0.4);
+}
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #ffae00;
+    box-shadow: 0 0 10px #ff8c00;
+}
+
+/* ปุ่ม */
+button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    background: linear-gradient(90deg, #ff4500, #ffae00);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    text-shadow: 1px 1px 3px #000;
+    box-shadow: 0 0 10px rgba(255, 69, 0, 0.7);
+    transition: all 0.3s ease;
+}
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 165, 0, 0.9);
+}
+
+/* ปุ่มรีเฟรช */
+.refresh-btn {
+    background: linear-gradient(90deg, #444, #777);
+    color: #fff;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+.refresh-btn:hover {
+    background: linear-gradient(90deg, #777, #bbb);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+}
+
+/* ตารางสถานะ */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.4);
+    color: #ffffff;
+    font-size: 14px;
+}
+th, td {
+    border: 1px solid rgba(255, 140, 0, 0.4);
+    padding: 6px;
+    text-align: center;
+}
+th {
+    background-color: rgba(255, 69, 0, 0.4);
+    color: #ffd700;
+}
+td input {
+    background: rgba(20, 20, 20, 0.8);
+    color: #ffffff;
+    border: 1px solid rgba(255, 140, 0, 0.3);
+}
+
+/* ปรับขนาดบนมือถือ */
+@media (max-width: 768px) {
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+    body {
+        padding: 10px;
+    }
+}
+/* === โค้ดสำหรับระบบทอยเต๋า === */
+
+/* พื้นที่สำหรับแสดงผลอนิเมชัน */
+.dice-animation-area {
+    min-height: 80px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 140, 0, 0.3);
+} /* ⭐️ [FIXED] วงเล็บปีกกาปิดที่หายไป */
+
+/* สไตล์ของลูกเต๋าแต่ละลูก */
+.dice {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(145deg, #f0e6d2, #c8bda9);
+    border: 2px solid #5a4a3a;
+    border-radius: 10px;
+    color: #3b2a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2em;
+    font-weight: bold;
+    font-family: 'Cinzel', serif;
+    text-shadow: none;
+    box-shadow: 3px 3px 5px rgba(0,0,0,0.5), inset 0 0 5px rgba(255,255,255,0.3);
+    transition: transform 0.2s ease-out;
+}
+
+/* อนิเมชันตอนกำลังทอย */
+.dice.rolling {
+    animation: roll-animation 0.75s infinite ease-in-out;
+}
+
+@keyframes roll-animation {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(15deg) scale(1.05); }
+    50% { transform: rotate(-15deg) scale(1.1); }
+    75% { transform: rotate(10deg) scale(1.05); }
+    100% { transform: rotate(0deg) scale(1); }
+}
+
+/* ผลรวมที่แสดงหลังจากทอยเสร็จ */
+.dice-result-text {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #ffeb8a;
+    text-shadow: 0 0 8px #ff4500;
+    text-align: center;
+    margin-top: 10px;
+}
+
+
+/* =================================================================================
+=== Scrollbar Customization (เส้นเลื่อน) ===
+================================================================================= */
+
+/* สำหรับ WebKit (Chrome, Safari) */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+/* Track/ร่องวิ่งของ Scrollbar */
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+}
+
+/* Handle/แถบเลื่อน */
+::-webkit-scrollbar-thumb {
+    background: #ffae00;
+    border-radius: 10px;
+    border: 1px solid #c70700;
+}
+
+/* Hover effect */
+::-webkit-scrollbar-thumb:hover {
+    background: #ffd700;
+}
+
+/* =================================================================================
+=== SweetAlert2 Custom Theme (ให้เข้ากับธีม D&D) ===
+================================================================================= */
+
+/* พื้นหลัง Pop-up หลัก */
+.swal2-popup {
+    background: rgba(10, 0, 0, 0.95) !important;
+    border: 2px solid #ffae00 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 25px rgba(255, 69, 0, 0.8) !important;
+    font-family: 'Prompt', sans-serif !important;
+}
+
+/* หัวข้อ (เช่น "สำเร็จ!", "ข้อผิดพลาด!") */
+.swal2-title {
+    color: #ffd700 !important;
+    text-shadow: 1px 1px 3px #000 !important;
+    font-family: 'Cinzel', serif !important;
+    font-size: 1.8em !important;
+}
+
+/* ข้อความรายละเอียด */
+.swal2-html-container, .swal2-input, .swal2-content {
+    color: #fff5cc !important;
+    font-size: 1.1em !important;
+}
+
+/* ปุ่มหลัก (Confirm Button) */
+.swal2-confirm {
+    background: linear-gradient(90deg, #ff4500, #ffae00) !important;
+    border: 1px solid #c70700 !important;
+    font-weight: bold !important;
+    color: #fff !important;
+    box-shadow: 0 4px 10px rgba(255, 69, 0, 0.5) !important;
+}
+
+/* ปุ่มรอง (Cancel/Deny Button) */
+.swal2-cancel, .swal2-deny {
+    background-color: #444 !important;
+    color: #ddd !important;
+    border: 1px solid #777 !important;
+}
+
+/* ไอคอน */
+.swal2-icon.swal2-success {
+    border-color: #28a745 !important;
+}
+.swal2-icon.swal2-success [class^=swal2-success-line] {
+    background-color: #28a745 !important;
+}
+.swal2-icon.swal2-error {
+    border-color: #dc3545 !important;
+    color: #dc3545 !important;
+}
+
+/* ช่องกรอกรหัสผ่าน (input) ใน Pop-up */
+.swal2-input {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid #ffae00 !important;
+    color: #fff !important;
+}
